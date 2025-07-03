@@ -1,0 +1,29 @@
+@use './_variables.sass' as vars
+
+@mixin phone
+    @media (max-width: #{vars.$phone-width})
+        @content
+
+@mixin tablet 
+    @media (min-width: #{vars.$phone-width + 1}) and (max-width: #{vars.$tablet-width})
+        @content
+
+@mixin laptop
+    @media (min-width: #{vars.$tablet-width + 1}) and (max-width: #{vars.$laptop-width})
+        @content
+
+@mixin desktop 
+    @media (min-width: #{vars.$laptop-width + 1}) and (max-width: #{vars.$large-desktop-width})
+        @content
+
+@mixin desktop-min
+    @media (min-width: #{vars.$laptop-width + 1})
+        @content
+
+@mixin large-desktop
+    @media (min-width: #{vars.$large-desktop-width + 1})
+        @content
+
+@mixin container($width, $height)
+    width: $width
+    height: $height
