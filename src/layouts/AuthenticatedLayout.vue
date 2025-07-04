@@ -59,16 +59,21 @@ const router = useRouter()
 
 // Computed para la URL de la imagen, con una imagen por defecto
 const userImageUrl = computed(() => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL // ej: http://127.0.0.1:8000
-  console.log('Base URL:', baseUrl)
-  const userImage = authStore.user?.imageUrl
-  if (userImage) {
-    // Si la URL del backend ya es completa, la usamos. Si es relativa, la completamos.
-    return userImage.startsWith('http') ? userImage : `${baseUrl}${userImage}`
+  // 1. Obtenemos la ruta relativa de la imagen desde el store
+  const userImageRelativeUrl = authStore.user?.imageUrl;
+
+  // 2. Si existe una ruta para la imagen del usuario, la usamos.
+  //    Esta será una ruta relativa como '/media/photos/user.png'.
+  //    El proxy de Vite se encargará de redirigirla al backend.
+  console.log('User Image URL:', userImageRelativeUrl);
+  if (userImageRelativeUrl) {
+    return userImageRelativeUrl;
   }
-  // Retorna una imagen por defecto si el usuario no tiene una
-  return '/default-avatar.png'
-})
+
+  // 3. Si no hay imagen, devolvemos la ruta a una imagen por defecto
+  //    que debe estar en tu carpeta `public` del proyecto de Vue.
+  return 'src/img/user.png';
+});
 
 // Computed para transformar el 'accessMap' del token en una lista para el NavMenu
 const menuItems = computed(() => {

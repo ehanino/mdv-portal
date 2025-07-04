@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
 const apiService = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // Lee la URL desde tu archivo .env
+  baseURL: '/',  //import.meta.env.VITE_API_BASE_URL, // Lee la URL desde tu archivo .env
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
