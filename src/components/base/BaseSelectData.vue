@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="form__div">
+  <fieldset class="form__div"  v-if="!hidden">
     <select
       v-bind="$attrs"
       class="form__input width-20"
@@ -54,6 +54,10 @@ const props = defineProps({
   editable: {
     type: Boolean,
     default: true, // Hacer editable por defecto
+  },
+  hidden: {
+    type: Boolean,
+    default: false, // Prop hidden con valor por defecto false
   },
 })
 

@@ -53,7 +53,7 @@ const textToSearch = ref('')
 
 //Estados en Usuario
 const estUsuario = reactive({
-  columns: ref(['id', 'Ape. Paterno', 'Ape. Materno', 'Nombres', 'Emai', 'Estado']),
+  columns: ref(['id', 'Ape. Paterno', 'Ape. Materno', 'Nombres', 'D.N.I.', 'Emai', 'Estado']),
   columnsTypes: ref({ 0: 'numeric', 1: 'text', 2: 'text', 3: 'text', 4: 'text', 5: 'text' }),
   columnsHidden: ref([0]),
   rows: ref([]),
