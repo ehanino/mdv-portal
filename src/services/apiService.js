@@ -3,12 +3,13 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
+axios.defaults.xsrfCookieName = 'csrftoken'
+axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+
 const apiService = axios.create({
-  baseURL: '/',  //import.meta.env.VITE_API_BASE_URL, // Lee la URL desde tu archivo .env
+  baseURL: '/', //import.meta.env.VITE_API_BASE_URL, // Lee la URL desde tu archivo .env
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: {},
 })
 
 // --- Interceptor para AÑADIR el token a cada petición ---

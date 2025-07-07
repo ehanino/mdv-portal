@@ -75,6 +75,8 @@
             inputId="nombres-select"
             labelValue="Estado Civil"
             :options="selectionOptionsPersona"
+            :readonly="isReadonly"
+            hidden="isHidden"
           />
           <!-- @change="updateSelectedType" -->
           <BaseInputData
@@ -83,12 +85,14 @@
             name="estadoPersona-ubigeo"
             inputId="estadoPersona-ubigeo"
             labelValue="Ubigeo"
+            :readonly="isReadonly"
+            hidden="isHidden"
           />
         </div>
 
         <div class="form-row-double row-buttons">
-          <button class="btn-nuevo">Nuevo</button>
-          <button class="btn-grabar">Grabar</button>
+          <button class="btn-nuevo" @click="resetFormulario">Nuevo</button>
+          <button class="btn-grabar" @click="insertUser">Grabar</button>
         </div>
       </div>
       <!--
@@ -110,9 +114,9 @@
 </template>
 
 <script setup>
-import axios from 'axios'
-import { ref, defineEmits, toRefs, defineExpose, reactive } from 'vue'
-// import { useAuthStore } from '@/stores/auth'
+// import axios from 'axios'
+import { ref, defineEmits, defineExpose, reactive } from 'vue'
+import apiService from '@/services/apiService'
 
 import iconUsersPath from '@/assets/img/user.png'
 import { getFullImageUrl } from '@/views/usuarios/services/usuarioServices'
@@ -184,6 +188,46 @@ defineExpose({
   estadoPersona,
   loadValidatedData,
 })
+
+const resetFormulario = () => {
+  Object.keys(estadoPersona).forEach((key) => {
+    estadoPersona[key] = ''
+  })
+  // imagenArchivo.value = null;
+  console.log('Formulario reseteado')
+}
+
+const insertUser = async () => {
+  const formData = new FormData()
+
+  Object.keys(estadoPersona).forEach((key) => {
+    if (estadoPersona[key]) {
+      // Solo añade campos que tengan valor
+      formData.append(key, estadoPersona[key])
+    }
+  })
+
+  try {
+    // 5. Envía la petición POST al endpoint de tu API para crear usuarios.
+    const datos = await apiService.post('/api/v1/identity/usuarios/', formData)
+
+    console.log(datos.data)
+
+    // 7. Limpia el formulario y actualiza la tabla de usuarios.
+    // resetFormulario()
+    // fetchUsuarios();
+  } catch (error) {
+    // 8. Si la API devuelve un error, lo capturamos aquí.
+    console.error('Error al crear el usuario:', error.response?.data || error.message)
+
+    // Extrae los mensajes de error del backend para mostrarlos al usuario.
+    const mensaje = error.response?.data
+      ? Object.values(error.response.data).flat().join('\n')
+      : 'Ocurrió un error inesperado.'
+
+    alert(`Error al crear el usuario:\n${mensaje}`)
+  }
+}
 
 // const validaDni = () => {
 //   if (!persDni.value || persDni.value.length !== 8 || isNaN(persDni.value)) {

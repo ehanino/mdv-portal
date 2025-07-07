@@ -2,6 +2,7 @@
 
 <template>
   <BaseValidaDni ref="baseValidaDniRef" />
+
   <div class="input-icon-container">
     <BaseInputData
       type="text"

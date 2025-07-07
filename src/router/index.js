@@ -6,8 +6,9 @@ import { useAuthStore } from '@/stores/auth'
 // Importamos nuestro nuevo Layout y las VISTAS que irán dentro de él
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import LoginView from '@/views/LoginView.vue'
-import AdministradoView from '@/views/administrados/AdministradoView.vue'
 import UsuarioView from '@/views/usuarios/UsuarioView.vue'
+import ActivateView from '@/views/usuarios/ActivateView.vue'
+import AdministradoView from '@/views/administrados/AdministradoView.vue'
 // import DashboardHomeView from '@/views/DashboardHomeView.vue' // La página de bienvenida del dashboard
 // import AccountActivationView from '@/views/AccountActivationView.vue'
 
@@ -18,11 +19,11 @@ const routes = [
     name: 'login',
     component: LoginView,
   },
-  // {
-  //   path: '/activate/:slug',
-  //   name: 'account-activation',
-  //   component: AccountActivationView,
-  // },
+  {
+    path: '/usuarios/activate/:slug',
+    name: 'account-activation',
+    component: ActivateView,
+  },
 
   // --- GRUPO DE RUTAS PRIVADAS / AUTENTICADAS ---
   {
