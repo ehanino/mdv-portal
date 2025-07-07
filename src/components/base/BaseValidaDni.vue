@@ -2,8 +2,8 @@
 
 <template>
   <div style="width: 65%; margin: auto auto; margin-top: 10px">
-    <div class="form-container sombra" style="padding: 5px">
-      <div class="profile-section">
+    <div class="form-container " style="padding: 5px">
+      <div class="profile-section user-photo">
         <input id="image" type="file" @change="handleImageUpload" accept="image/*" hidden />
         <img
           :src="
@@ -16,16 +16,24 @@
         />
         <label for="image" class="label-img" hidden>Selecciona imagen</label>
       </div>
-      <div class="form-section" style="min-width: 500px">
+      <div class="form-section">
         <div class="row row-double">
-          <BaseInputData
-            type="text"
-            v-model="estadoPersona.dni"
-            name="estadoPersona-dni"
-            inputId="estadoPersona-dni"
-            labelValue="DNI"
-            style="max-width: 300px"
-          />
+          <div class="search-container">
+            <BaseInputData
+              type="text"
+              v-model="estadoPersona.dni"
+              name="estadoPersona-dni"
+              inputId="estadoPersona-dni"
+              labelValue="DNI"
+              style="width: 310px;"
+            />
+            <button class="search-button" @click="validaDni" title="Validar DNI">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </div>
           <BaseInputData
             type="text"
             v-model="estadoPersona.restriccion"
@@ -33,6 +41,7 @@
             inputId="estadoPersona-restriccion"
             labelValue="Restricción"
             :readonly="isReadonly"
+            style="width: 310px;"
             :hidden="isHidden"
           />
         </div>
@@ -114,9 +123,15 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
 // import axios from 'axios'
 import { ref, defineEmits, defineExpose, reactive } from 'vue'
 import apiService from '@/services/apiService'
+=======
+import { ref, defineEmits, toRefs, defineExpose, reactive } from 'vue'
+import { showMessageDialog } from '@/common/messageUtils'
+// import { useAuthStore } from '@/stores/auth'
+>>>>>>> 53eb4629fc4132adc72aa6d98fb615abe470771b
 
 import iconUsersPath from '@/assets/img/user.png'
 import { getFullImageUrl } from '@/views/usuarios/services/usuarioServices'
@@ -151,8 +166,8 @@ const estadoPersona = reactive({
 const selectionOptionsPersona = ref([
   { value: 0, label: 'Soltero' },
   { value: 1, label: 'Casado' },
-  { value: 2, label: 'Divorciado' },
-  { value: 3, label: 'Viudo' },
+  { value: 2, label: 'Viudo' },
+  { value: 3, label: 'Divorciado' },
 ])
 
 // Refs
@@ -188,6 +203,7 @@ defineExpose({
   estadoPersona,
   loadValidatedData,
 })
+
 
 const resetFormulario = () => {
   Object.keys(estadoPersona).forEach((key) => {
@@ -237,6 +253,7 @@ const insertUser = async () => {
 //   apiValidaDocIdentidad(persDni.value, jwt, loadValidatedData)
 // }
 
+
 // const apiValidaDocIdentidad = (nro_dni, jwt, callback) => {
 //   console.log('NINO')
 //   const apiURL = `${apiBaseURL}/usuario/api/valida-dni/?dni=${nro_dni}`
@@ -276,6 +293,7 @@ const insertUser = async () => {
 <style lang="sass" scoped>
 .form-container
   display: flex
+  justify-content: space-around
   flex-direction: row
   gap: 1rem
   margin-bottom: 5px
@@ -287,7 +305,7 @@ const insertUser = async () => {
   display: flex
   flex-direction: column
   align-items: center
-  margin-right: 2rem
+  // margin-right: 2rem
 
 .avatar
   width: 120px
@@ -295,7 +313,9 @@ const insertUser = async () => {
   border-radius: 50%
   background: #ddd
   object-fit: cover
-
+.user-photo
+  display: flex
+  justify-content: center
 .btn-select
   margin-top: 1rem
   background-color: #55c2d6
@@ -354,4 +374,20 @@ input, select
 
 .btn-grabar
   background-color: #42b3d4
+.search-container
+  position: relative
+.search-button
+  position: absolute
+  right: 3px /* Distancia desde la derecha */
+  bottom: -13px
+  transform: translateY(-50%) /* Centra verticalmente */
+  width: 30px /* Ancho del botón */
+  height: 30px /* Alto del botón */
+  background-color: #55c2d6 /* Color azul */
+  border: none
+  border-radius: 50% /* Lo hace perfectamente circular */
+  cursor: pointer
+  display: flex
+  justify-content: center
+  align-items: center
 </style>
