@@ -2,7 +2,7 @@
 
 <template>
   <div style="width: 65%; margin: auto auto; margin-top: 10px">
-    <div class="form-container " style="padding: 5px">
+    <div class="form-container" style="padding: 5px">
       <div class="profile-section user-photo">
         <input id="image" type="file" @change="handleImageUpload" accept="image/*" hidden />
         <img
@@ -25,10 +25,20 @@
               name="estadoPersona-dni"
               inputId="estadoPersona-dni"
               labelValue="DNI"
-              style="width: 310px;"
+              style="width: 310px"
             />
             <button class="search-button" @click="validaDni" title="Validar DNI">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
@@ -41,8 +51,7 @@
             inputId="estadoPersona-restriccion"
             labelValue="Restricción"
             :readonly="isReadonly"
-            style="width: 310px;"
-            :hidden="isHidden"
+            style="width: 310px"
           />
         </div>
         <div class="row row-double">
@@ -85,7 +94,7 @@
             labelValue="Estado Civil"
             :options="selectionOptionsPersona"
             :readonly="isReadonly"
-            hidden="isHidden"
+            :hidden="props.hideEstadoCivil"
           />
           <!-- @change="updateSelectedType" -->
           <BaseInputData
@@ -95,7 +104,7 @@
             inputId="estadoPersona-ubigeo"
             labelValue="Ubigeo"
             :readonly="isReadonly"
-            hidden="isHidden"
+            :hidden="props.hideUbigeo"
           />
         </div>
 
@@ -123,21 +132,31 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
+// <<<<<<< HEAD
 // import axios from 'axios'
 import { ref, defineEmits, defineExpose, reactive } from 'vue'
 import apiService from '@/services/apiService'
-=======
-import { ref, defineEmits, toRefs, defineExpose, reactive } from 'vue'
+// =======
+// import { ref, defineEmits, toRefs, defineExpose, reactive } from 'vue'
 import { showMessageDialog } from '@/common/messageUtils'
 // import { useAuthStore } from '@/stores/auth'
->>>>>>> 53eb4629fc4132adc72aa6d98fb615abe470771b
+// >>>>>>> 53eb4629fc4132adc72aa6d98fb615abe470771b
 
 import iconUsersPath from '@/assets/img/user.png'
 import { getFullImageUrl } from '@/views/usuarios/services/usuarioServices'
 
 const isReadonly = ref(true)
-const isHidden = ref(false)
+
+const props = defineProps({
+  hideUbigeo: {
+    type: Boolean,
+    default: false,
+  },
+  hideEstadoCivil: {
+    type: Boolean,
+    default: false,
+  },
+})
 const imagePreview = ref(null)
 
 // const apiBaseURL = import.meta.env.VITE_API_BASE_URL
@@ -204,7 +223,6 @@ defineExpose({
   loadValidatedData,
 })
 
-
 const resetFormulario = () => {
   Object.keys(estadoPersona).forEach((key) => {
     estadoPersona[key] = ''
@@ -252,7 +270,6 @@ const insertUser = async () => {
 //   }
 //   apiValidaDocIdentidad(persDni.value, jwt, loadValidatedData)
 // }
-
 
 // const apiValidaDocIdentidad = (nro_dni, jwt, callback) => {
 //   console.log('NINO')

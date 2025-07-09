@@ -1,7 +1,7 @@
 <!-- src/views/usuarios/UsuarioView.vue -->
 
 <template>
-  <BaseValidaDni ref="baseValidaDniRef" />
+  <BaseValidaDni ref="baseValidaDniRef" :hideUbigeo="true" :hideEstadoCivil="true" />
 
   <div class="input-icon-container">
     <BaseInputData
