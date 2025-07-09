@@ -14,7 +14,7 @@
           class="avatar"
           title="CRUD User"
         />
-        <label for="image" class="label-img" hidden>Selecciona imagen</label>
+        <label for="image" class="label-img" :hidden="hideSeleccionarImagen">Selecciona imagen</label>
       </div>
       <div class="form-section">
         <div class="row row-double">
@@ -110,7 +110,7 @@
 
         <div class="form-row-double row-buttons">
           <button class="btn-nuevo" @click="resetFormulario">Nuevo</button>
-          <button class="btn-grabar" @click="insertUser">Grabar</button>
+          <button class="btn-grabar" @click="emit('save-data', estadoPersona)">Grabar</button>
         </div>
       </div>
       <!--
@@ -156,6 +156,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  hideSeleccionarImagen: {
+    type: Boolean,
+    default: false,
+  },
 })
 const imagePreview = ref(null)
 
@@ -167,7 +171,7 @@ const imagePreview = ref(null)
 // const jwt = accessToken.value
 
 // Emits
-const emit = defineEmits(['update:modelValue', 'image-upload'])
+const emit = defineEmits(['update:modelValue', 'image-upload', 'save-data'])
 
 const estadoPersona = reactive({
   id: '',
@@ -231,6 +235,7 @@ const resetFormulario = () => {
   console.log('Formulario reseteado')
 }
 
+/*
 const insertUser = async () => {
   const formData = new FormData()
 
@@ -262,6 +267,7 @@ const insertUser = async () => {
     alert(`Error al crear el usuario:\n${mensaje}`)
   }
 }
+*/
 
 // const validaDni = () => {
 //   if (!persDni.value || persDni.value.length !== 8 || isNaN(persDni.value)) {
@@ -407,4 +413,11 @@ input, select
   display: flex
   justify-content: center
   align-items: center
+.label-img
+  cursor: pointer
+  color: #03c6d3
+  font-style: italic
+  font-size: 12px
+  &:hover
+    color: #42b3d4
 </style>

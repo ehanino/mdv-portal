@@ -1,7 +1,7 @@
 <!-- src/views/usuarios/UsuarioView.vue -->
 
 <template>
-  <BaseValidaDni ref="baseValidaDniRef" :hideUbigeo="true" :hideEstadoCivil="true" />
+  <BaseValidaDni ref="baseValidaDniRef" :hideUbigeo="true" :hideEstadoCivil="true" @save-data="handleSaveData" @image-upload="handleImageFile" />
 
   <div class="input-icon-container">
     <BaseInputData
@@ -45,12 +45,15 @@ import { reactive, ref } from 'vue'
 
 import BaseValidaDni from '@/components/base/BaseValidaDni.vue'
 import BaseTemplateData from '@/components/base/BaseTemplateData.vue'
+import apiService from '@/services/apiService'
 
 import iconExcel from '@/assets/img/excel.png'
 
 const baseValidaDniRef = ref(null)
 
 const textToSearch = ref('')
+
+const imageFile = ref(null)
 
 //Estados en Usuario
 const estUsuario = reactive({
@@ -70,6 +73,38 @@ const estAplicacion = reactive({
 
 const isHidden = ref(false)
 // const imagePreview = ref(null)
+
+const handleImageFile = (file) => {
+  imageFile.value = file
+}
+
+const handleSaveData = async (personaData) => {
+  const formData = new FormData()
+
+  Object.keys(personaData).forEach((key) => {
+    if (personaData[key]) {
+      formData.append(key, personaData[key])
+    }
+  })
+
+  if (imageFile.value) {
+    formData.append('photo', imageFile.value)
+  }
+
+  try {
+    const datos = await apiService.post('/api/v1/identity/usuarios/', formData)
+    console.log('Usuario insertado con éxito:', datos.data)
+    // Aquí puedes añadir lógica adicional, como mostrar un mensaje de éxito,
+    // limpiar el formulario (si el padre lo controla), o actualizar una tabla.
+    alert('Usuario insertado con éxito.') // Mensaje de éxito simple
+  } catch (error) {
+    console.error('Error al crear el usuario:', error.response?.data || error.message)
+    const mensaje = error.response?.data
+      ? Object.values(error.response.data).flat().join('\n')
+      : 'Ocurrió un error inesperado.'
+    alert(`Error al crear el usuario:\n${mensaje}`)
+  }
+}
 </script>
 
 <style lang="sass" scoped>
