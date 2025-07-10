@@ -1,8 +1,9 @@
 <!-- src/views/administrados/AdministradoView.vue -->
 
 <template>
-  <BaseValidaDni ref="baseValidaDniRef" :hideUbigeo="false" :hideEstadoCivil="false" />
-
+  <div style="width: 65%; margin: auto auto">
+    <BaseValidaDni ref="baseValidaDniRef" :hideUbigeo="false" :hideEstadoCivil="false" />
+  </div>
   <div class="input-icon-container">
     <BaseInputData
       type="text"

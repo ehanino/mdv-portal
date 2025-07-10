@@ -1,15 +1,16 @@
 <!-- src/views/usuarios/UsuarioView.vue -->
 
 <template>
-  <BaseValidaDni
-    ref="baseValidaDniRef"
-    :hideUbigeo="true"
-    :hideEstadoCivil="true"
-    :hideButtonValidaDni="true"
-    @save-data="handleSaveData"
-    @image-upload="handleImageFile"
-  />
-
+  <div style="width: 65%; margin: auto auto">
+    <BaseValidaDni
+      ref="baseValidaDniRef"
+      :hideUbigeo="true"
+      :hideEstadoCivil="true"
+      :hideButtonValidaDni="true"
+      @save-data="handleSaveData"
+      @image-upload="handleImageFile"
+    />
+  </div>
   <div class="input-icon-container">
     <BaseInputData
       type="text"
@@ -37,72 +38,108 @@
     </template>
     <template #actions="{ row }">
       <div class="flex gap-5">
-        <img :src="imgEdit" alt="Ícono de PDF" class="pdf-min" @click="openEditUserModal(row)" />
-        <!-- @click="openModal('parrafosModal', row[0])" -->
-        <!-- <img :src="imgDelete" @click="deleteRow(row[0])" class="pdf-min" /> -->
+        <img
+          :src="imgEdit"
+          alt="Ícono de PDF"
+          class="pdf-min"
+          @click="openModal('UsuarioModalView', row[0])"
+        />
       </div>
     </template>
   </BaseTemplateData>
 
-  <!-- ADDED: User Edit Modal -->
-  <ModalComponent :is-open="isEditUserModalOpen" @close="closeEditUserModal">
+  <!-- M O D A L   -->
+  <ModalComponent :isOpen="!!activeModal.key" @close="closeModal">
+    <!-- Contenido personalizado dentro de la modal -->
     <template #modal-content>
-      <UserModalView :user-to-edit="selectedUser" @close-modal="closeEditUserModal" />
-    </template>
-  </ModalComponent>
-</template>
+      <!-- Aquí pasamos el BaseCard dentro del modal -->
+      <CardRow>
+        <template #title>{{ modalTitles[activeModal.key] }}</template>
 
+        <template #body>
+          <div v-if="activeModal.key === 'UsuarioModalView'">
+            <UsuarioModalView :usuario-id="activeModal.id"></UsuarioModalView>
+          </div>
+        </template>
+      </CardRow>
+    </template>
+    <button @click="closeModal">Cerrar Modal</button>
+  </ModalComponent>
+  <!-- E N D   M O D A L  -->
+</template>
 <script setup>
+// ========================
+// IMPORTS
+// ========================
 import { reactive, ref, onMounted } from 'vue'
 
+// Components
+import CardRow from '@/components/base/BaseCard.vue'
 import BaseValidaDni from '@/components/base/BaseValidaDni.vue'
 import BaseTemplateData from '@/components/base/BaseTemplateData.vue'
-import apiService from '@/services/apiService'
+import ModalComponent from '@/components/base/ModalComponent.vue'
+import UsuarioModalView from '@/views/usuarios/UsuarioModalView.vue'
 
+// Services & Utilities
+import apiService from '@/services/apiService'
+import { exportDataToExcel } from '@/common/utilities'
+import { showMessageDialog } from '@/common/messageUtils.js'
+
+// Assets
 import iconExcel from '@/assets/img/excel.png'
 import imgEdit from '@/assets/img/edit.png'
-import imgDelete from '@/assets/img/eliminar.png'
 
-import { exportDataToExcel } from '@/common/utilities'
-
-// ADDED: Import ModalComponent and UserModalView
-import ModalComponent from '@/components/base/ModalComponent.vue'
-import UserModalView from '@/views/usuarios/UserModalView.vue'
-
+// ========================
+// REACTIVE VARIABLES
+// ========================
+// Form references
 const baseValidaDniRef = ref(null)
-
 const textToSearch = ref('')
-
 const imageFile = ref(null)
 
+// Data
 const estUsuarioRows = ref([])
 
-// ADDED: Reactive variables for modal control
-const isEditUserModalOpen = ref(false)
-const selectedUser = ref(null)
+// Modal management
+const activeModal = ref({
+  key: null, // Modal name ('UsuarioModalView', etc.)
+  id: null, // ID to pass as prop
+})
 
+const modalTitles = {
+  UsuarioModalView: 'Mantenimiento de Usuario',
+}
+
+// Table configuration
 const estUsuario = reactive({
   columns: ref(['id', 'Ape. Paterno', 'Ape. Materno', 'Nombres', 'D.N.I.', 'Email', 'Estado']),
   columnsTypes: ref({ 0: 'numeric', 1: 'text', 2: 'text', 3: 'text', 4: 'text', 5: 'text' }),
   columnsHidden: ref([0]),
 })
 
-const estAplicacion = reactive({
-  columns: ref(['id', 'Aplicación', 'Descripción', 'Estado']),
-  columnsTypes: ref({ 0: 'numeric', 1: 'text', 2: 'text', 3: 'text' }),
-  columnsHidden: ref([0]),
-  rows: ref([]),
-})
+// ========================
+// MODAL FUNCTIONS
+// ========================
+const openModal = (key, id) => {
+  activeModal.value = { key, id }
+}
 
+const closeModal = () => {
+  activeModal.value = { key: null, id: null }
+}
+
+// ========================
+// DATA HANDLING FUNCTIONS
+// ========================
 const mapApiDataToRows = (apiData) => {
-  estUsuarioRows.value = (apiData || []).map((user) => [
-    user.id || '',
-    user.apellido_paterno || '',
-    user.apellido_materno || '',
-    user.nombres || '',
-    user.dni || '',
-    user.email || '',
-    user.is_active ? 'Activo' : 'Inactivo',
+  estUsuarioRows.value = (apiData || []).map((row) => [
+    row.slug || '',
+    row.apellido_paterno || '',
+    row.apellido_materno || '',
+    row.nombres || '',
+    row.dni || '',
+    row.email || '',
+    row.is_active ? 'Activo' : 'Inactivo',
   ])
 }
 
@@ -119,21 +156,9 @@ const fetchUsuarios = async (searchQuery = '') => {
   }
 }
 
-const exportToExcel = () => {
-  const filename = `usuarios_${new Date().toISOString().slice(0, 10)}.xlsx`
-  exportDataToExcel(
-    '/api/v1/identity/usuarios/export/excel/', // Backend endpoint for Excel export
-    { search: textToSearch.value }, // Pass current search filter
-    filename,
-  )
-}
-
-onMounted(() => {
-  fetchUsuarios()
-})
-
-const isHidden = ref(false)
-
+// ========================
+// FORM HANDLING FUNCTIONS
+// ========================
 const handleImageFile = (file) => {
   imageFile.value = file
 }
@@ -152,33 +177,33 @@ const handleSaveData = async (personaData) => {
   }
 
   try {
-    const datos = await apiService.post('/api/v1/identity/usuarios/', formData)
+    await apiService.post('/api/v1/identity/usuarios/', formData)
+    showMessageDialog('Usuario creado correctamente')
+    baseValidaDniRef.value?.resetFormulario() // Reset form after fetching data
     fetchUsuarios()
   } catch (error) {
     console.error('Error al crear el usuario:', error.response?.data || error.message)
   }
 }
 
-// ADDED: Functions to open and close the edit user modal
-const openEditUserModal = (userRow) => {
-  // Map the row array back to an object for easier access in the modal
-  selectedUser.value = {
-    id: userRow[0],
-    apellido_paterno: userRow[1],
-    apellido_materno: userRow[2],
-    nombres: userRow[3],
-    dni: userRow[4],
-    email: userRow[5],
-    is_active: userRow[6] === 'Activo' ? true : false, // Convert back to boolean
-  }
-  isEditUserModalOpen.value = true
+// ========================
+// EXPORT FUNCTIONS
+// ========================
+const exportToExcel = () => {
+  const filename = `usuarios_${new Date().toISOString().slice(0, 10)}.xlsx`
+  exportDataToExcel(
+    '/api/v1/identity/usuarios/export/excel/', // Backend endpoint for Excel export
+    { search: textToSearch.value }, // Pass current search filter
+    filename,
+  )
 }
 
-const closeEditUserModal = () => {
-  isEditUserModalOpen.value = false
-  selectedUser.value = null
-  fetchUsuarios() // Refresh user list after closing modal (in case of update)
-}
+// ========================
+// LIFECYCLE HOOKS
+// ========================
+onMounted(() => {
+  fetchUsuarios()
+})
 </script>
 
 <style lang="sass" scoped>

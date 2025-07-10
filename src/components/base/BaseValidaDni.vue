@@ -1,7 +1,7 @@
 <!-- src/components/base/BaseValidaDni.vue -->
 
 <template>
-  <div style="width: 65%; margin: auto auto; margin-top: 10px">
+  <div style="margin: auto auto; margin-top: 10px">
     <div class="form-container" style="padding: 5px">
       <div class="profile-section user-photo">
         <input id="image" type="file" @change="handleImageUpload" accept="image/*" hidden />
@@ -14,7 +14,7 @@
           class="avatar"
           title="CRUD User"
         />
-        <label for="image" class="label-img" :hidden="hideSeleccionarImagen"
+        <label for="image" class="label-img" :hidden="props.hideSeleccionarImagen"
           >Selecciona imagen</label
         >
       </div>
@@ -27,12 +27,12 @@
               name="estadoPersona-dni"
               inputId="estadoPersona-dni"
               labelValue="DNI"
-              :style="{ width: hideButtonValidaDni ? '312px' : '180px' }"
+              :style="{ width: props.hideButtonValidaDni ? '312px' : '180px' }"
               @keydown="forceNumeric"
               @blur="validateDniLength"
             />
           </div>
-          <div class="row-buttons" v-if="!hideButtonValidaDni" style="padding-right: 4px">
+          <div class="row-buttons" v-if="!props.hideButtonValidaDni" style="padding-right: 4px">
             <button class="btn-nuevo" @click="validaDni">Valida</button>
           </div>
           <BaseInputData
@@ -89,7 +89,7 @@
             labelValue="Estado Civil"
             :options="selectionOptionsPersona"
             :readonly="isReadonly"
-            :hidden="hideEstadoCivil"
+            :hidden="props.hideEstadoCivil"
           />
           <!-- @change="updateSelectedType" -->
           <BaseInputData
@@ -99,7 +99,7 @@
             inputId="estadoPersona-ubigeo"
             labelValue="Ubigeo"
             :readonly="isReadonly"
-            :hidden="hideUbigeo"
+            :hidden="props.hideUbigeo"
           />
         </div>
 
@@ -127,15 +127,51 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose, reactive } from 'vue'
-import apiService from '@/services/apiService'
-import { showErrorDialog } from '@/common/messageUtils'
+// ========================
+// IMPORTS
+// ========================
 
-import iconUsersPath from '@/assets/img/user.png'
+// Vue composables
+import { ref, reactive, defineEmits, defineExpose, defineProps } from 'vue'
+
+// Servicios y utilidades
+import { showErrorDialog } from '@/common/messageUtils'
 import { getFullImageUrl } from '@/views/usuarios/services/usuarioServices'
 
+// Assets
+import iconUsersPath from '@/assets/img/user.png'
+
+// ========================
+// REACTIVE VARIABLES
+// ========================
+
+// Form references
+const estadoPersona = reactive({
+  id: '',
+  dni: '',
+  apellido_paterno: '',
+  apellido_materno: '',
+  nombres: '',
+  estadoCivil: 0,
+  ubigeo: '',
+  restriccion: '',
+  direccion: '',
+  photo_url: '',
+})
+
+const imagePreview = ref(null)
+
+const selectionOptionsPersona = ref([
+  { value: 0, label: 'Soltero' },
+  { value: 1, label: 'Casado' },
+  { value: 2, label: 'Viudo' },
+  { value: 3, label: 'Divorciado' },
+])
+
+// Datos de la aplicación
 const isReadonly = ref(true)
 
+// Propiedades
 const props = defineProps({
   hideUbigeo: {
     type: Boolean,
@@ -155,32 +191,39 @@ const props = defineProps({
   },
 })
 
-const imagePreview = ref(null)
-
 // Emits
 const emit = defineEmits(['update:modelValue', 'image-upload', 'save-data'])
 
-const estadoPersona = reactive({
-  id: '',
-  dni: '',
-  apellido_paterno: '',
-  apellido_materno: '',
-  nombres: '',
-  estadoCivil: 0,
-  ubigeo: '',
-  restriccion: '',
-  direccion: '',
-  photo_url: '',
-})
+// ========================
+// MODAL FUNCTIONS
+// ========================
+// (No hay funciones de modales en el código proporcionado)
 
-const selectionOptionsPersona = ref([
-  { value: 0, label: 'Soltero' },
-  { value: 1, label: 'Casado' },
-  { value: 2, label: 'Viudo' },
-  { value: 3, label: 'Divorciado' },
-])
+// ========================
+// DATA HANDLING FUNCTIONS
+// ========================
 
-// Methods
+// Mapeo de datos
+const loadValidatedData = (data) => {
+  estadoPersona.id = data.pk
+  estadoPersona.dni = data.dni
+  estadoPersona.apellido_paterno = data.apellido_paterno
+  estadoPersona.apellido_materno = data.apellido_materno
+  estadoPersona.nombres = data.nombres
+  estadoPersona.estadoCivil = data.estadoCivil
+  estadoPersona.ubigeo = data.ubigeo
+  estadoPersona.restriccion = data.restriccion
+  estadoPersona.direccion = data.direccion
+  estadoPersona.photo_url = data.photo_url
+}
+
+// Fetch de usuarios
+// (No hay funciones de fetch explícitas en el código proporcionado, pero apiService podría usarse para esto)
+
+// ========================
+// FORM HANDLING FUNCTIONS
+// ========================
+
 const forceNumeric = (event) => {
   // Allow control keys like backspace, delete, arrows, etc.
   if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
@@ -227,31 +270,32 @@ const handleImageUpload = (event) => {
   }
 }
 
-const loadValidatedData = (data) => {
-  estadoPersona.id = data.pk
-  estadoPersona.dni = data.dni
-  estadoPersona.apellido_paterno = data.apellido_paterno
-  estadoPersona.apellido_materno = data.apellido_materno
-  estadoPersona.nombres = data.nombres
-  estadoPersona.estadoCivil = data.estadoCivil
-  estadoPersona.ubigeo = data.ubigeo
-  estadoPersona.restriccion = data.restriccion
-  estadoPersona.direccion = data.direccion
-  estadoPersona.photo_url = data.photo_url
-}
-
-// Expose
-defineExpose({
-  estadoPersona,
-  loadValidatedData,
-})
-
 const resetFormulario = () => {
   Object.keys(estadoPersona).forEach((key) => {
     estadoPersona[key] = ''
   })
   console.log('Formulario reseteado')
 }
+
+// ========================
+// EXPORT FUNCTIONS
+// ========================
+
+defineExpose({
+  estadoPersona,
+  loadValidatedData,
+  resetFormulario,
+})
+
+// ========================
+// LIFECYCLE HOOKS
+// ========================
+// (No hay hooks de ciclo de vida en el código proporcionado)
+
+// ========================
+// COMMENTED CODE
+// ========================
+// (No hay código comentado en el código proporcionado)
 </script>
 
 <style lang="sass" scoped>

@@ -1,5 +1,5 @@
 <template>
-  <div class="table-container">
+  <div class="table-container" style="padding: 5px">
     <table class="custom-table">
       <thead>
         <tr>
