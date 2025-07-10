@@ -14,7 +14,7 @@
           <td
             v-for="(column, colIndex) in visibleColumnIndexes"
             :key="colIndex"
-            :class="['manito', getCellClass(row[column], column)]"
+            :class="['manito', getCellClass(row[column], colIndex, column)]"
             @click="handleRowClick(row)"
             class="font-td"
           >
@@ -68,6 +68,11 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  // ADDED: New prop to specify the index of the status column for cell styling
+  statusColumnIndex: {
+    type: Number,
+    default: -1, // -1 means no status column
+  },
 })
 
 // Emitir evento de clic en la fila
@@ -103,8 +108,20 @@ function getRowClasses(row) {
 }
 
 // Obtener clase para una celda basada en su tipo
-function getCellClass(value, colIndex) {
+function getCellClass(value, colIndex, originalColumnIndex) {
+  // MODIFIED: Added originalColumnIndex
+  // console.log(`getCellClass - value: ${value}, colIndex: ${colIndex}, originalColumnIndex: ${originalColumnIndex}, statusColumnIndex: ${props.statusColumnIndex}`); // MODIFIED for debugging
   const type = props.columnTypes[colIndex]
+
+  // MODIFIED: Check if this is the status column using originalColumnIndex
+  if (originalColumnIndex === props.statusColumnIndex) {
+    if (value === 'Activo') {
+      return 'status-active-cell'
+    } else if (value === 'Inactivo') {
+      return 'status-inactive-cell'
+    }
+  }
+
   if (type === 'number' || type === 'decimal') {
     return type
   }
@@ -203,11 +220,11 @@ function formatCellValue(value, colIndex) {
     width: 25px
     text-align: center !important
 
-.empty-state
-    display: flex
-    justify-content: center
-    align-items: center
-    padding: 20px
-    font-style: italic
-    color: #666
+// ADDED: Styles for status cells
+.status-active-cell
+  background-color: #dcfce7; // light green
+  font-weight: bold;
+.status-inactive-cell
+  background-color: #fee2e2; // light red
+  font-weight: bold;
 </style>

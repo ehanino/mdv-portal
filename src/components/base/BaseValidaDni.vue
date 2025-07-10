@@ -14,7 +14,9 @@
           class="avatar"
           title="CRUD User"
         />
-        <label for="image" class="label-img" :hidden="hideSeleccionarImagen">Selecciona imagen</label>
+        <label for="image" class="label-img" :hidden="hideSeleccionarImagen"
+          >Selecciona imagen</label
+        >
       </div>
       <div class="form-section">
         <div class="row row-double">
@@ -25,24 +27,13 @@
               name="estadoPersona-dni"
               inputId="estadoPersona-dni"
               labelValue="DNI"
-              style="width: 310px"
+              :style="{ width: hideButtonValidaDni ? '312px' : '180px' }"
+              @keydown="forceNumeric"
+              @blur="validateDniLength"
             />
-            <button class="search-button" @click="validaDni" title="Validar DNI">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </button>
+          </div>
+          <div class="row-buttons" v-if="!hideButtonValidaDni" style="padding-right: 4px">
+            <button class="btn-nuevo" @click="validaDni">Valida</button>
           </div>
           <BaseInputData
             type="text"
@@ -52,6 +43,7 @@
             labelValue="Restricción"
             :readonly="isReadonly"
             style="width: 310px"
+            tabindex="-1"
           />
         </div>
         <div class="row row-double">
@@ -61,6 +53,7 @@
             name="estadoPersona-apellido-paterno"
             inputId="estadoPersona-apellido-paterno"
             labelValue="Apellido Paterno"
+            @keydown="forceAlphabetic"
           />
           <BaseInputData
             type="text"
@@ -68,6 +61,7 @@
             name="estadoPersona-apellido-materno"
             inputId="estadoPersona-apellido-materno"
             labelValue="Apellido Materno"
+            @keydown="forceAlphabetic"
           />
         </div>
 
@@ -77,6 +71,7 @@
           name="estadoPersona-nombres"
           inputId="estadoPersona-nombres"
           labelValue="Nombres"
+          @keydown="forceAlphabetic"
         />
 
         <BaseInputData
@@ -94,7 +89,7 @@
             labelValue="Estado Civil"
             :options="selectionOptionsPersona"
             :readonly="isReadonly"
-            :hidden="props.hideEstadoCivil"
+            :hidden="hideEstadoCivil"
           />
           <!-- @change="updateSelectedType" -->
           <BaseInputData
@@ -104,7 +99,7 @@
             inputId="estadoPersona-ubigeo"
             labelValue="Ubigeo"
             :readonly="isReadonly"
-            :hidden="props.hideUbigeo"
+            :hidden="hideUbigeo"
           />
         </div>
 
@@ -132,15 +127,9 @@
 </template>
 
 <script setup>
-// <<<<<<< HEAD
-// import axios from 'axios'
 import { ref, defineEmits, defineExpose, reactive } from 'vue'
 import apiService from '@/services/apiService'
-// =======
-// import { ref, defineEmits, toRefs, defineExpose, reactive } from 'vue'
-import { showMessageDialog } from '@/common/messageUtils'
-// import { useAuthStore } from '@/stores/auth'
-// >>>>>>> 53eb4629fc4132adc72aa6d98fb615abe470771b
+import { showErrorDialog } from '@/common/messageUtils'
 
 import iconUsersPath from '@/assets/img/user.png'
 import { getFullImageUrl } from '@/views/usuarios/services/usuarioServices'
@@ -160,15 +149,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  hideButtonValidaDni: {
+    type: Boolean,
+    default: false,
+  },
 })
+
 const imagePreview = ref(null)
-
-// const apiBaseURL = import.meta.env.VITE_API_BASE_URL
-
-// Store
-// const authStore = useAuthStore()
-// const { accessToken } = toRefs(authStore)
-// const jwt = accessToken.value
 
 // Emits
 const emit = defineEmits(['update:modelValue', 'image-upload', 'save-data'])
@@ -193,9 +180,41 @@ const selectionOptionsPersona = ref([
   { value: 3, label: 'Divorciado' },
 ])
 
-// Refs
-
 // Methods
+const forceNumeric = (event) => {
+  // Allow control keys like backspace, delete, arrows, etc.
+  if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
+    return
+  }
+  // Prevent non-numeric characters
+  if (!/[0-9]/.test(event.key)) {
+    event.preventDefault()
+    return
+  }
+  // Prevent typing more than 8 digits
+  if (event.target.value.length >= 8) {
+    event.preventDefault()
+  }
+}
+
+const validateDniLength = () => {
+  if (estadoPersona.dni.length > 0 && estadoPersona.dni.length !== 8) {
+    showErrorDialog('Error de Validación', 'El DNI debe contener exactamente 8 dígitos.')
+  }
+}
+
+const forceAlphabetic = (event) => {
+  // Allow control keys
+  if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
+    return
+  }
+  // Regex for Spanish alphabet, including space
+  const pattern = /^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s]$/
+  if (!pattern.test(event.key)) {
+    event.preventDefault()
+  }
+}
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
@@ -231,86 +250,8 @@ const resetFormulario = () => {
   Object.keys(estadoPersona).forEach((key) => {
     estadoPersona[key] = ''
   })
-  // imagenArchivo.value = null;
   console.log('Formulario reseteado')
 }
-
-/*
-const insertUser = async () => {
-  const formData = new FormData()
-
-  Object.keys(estadoPersona).forEach((key) => {
-    if (estadoPersona[key]) {
-      // Solo añade campos que tengan valor
-      formData.append(key, estadoPersona[key])
-    }
-  })
-
-  try {
-    // 5. Envía la petición POST al endpoint de tu API para crear usuarios.
-    const datos = await apiService.post('/api/v1/identity/usuarios/', formData)
-
-    console.log(datos.data)
-
-    // 7. Limpia el formulario y actualiza la tabla de usuarios.
-    // resetFormulario()
-    // fetchUsuarios();
-  } catch (error) {
-    // 8. Si la API devuelve un error, lo capturamos aquí.
-    console.error('Error al crear el usuario:', error.response?.data || error.message)
-
-    // Extrae los mensajes de error del backend para mostrarlos al usuario.
-    const mensaje = error.response?.data
-      ? Object.values(error.response.data).flat().join('\n')
-      : 'Ocurrió un error inesperado.'
-
-    alert(`Error al crear el usuario:\n${mensaje}`)
-  }
-}
-*/
-
-// const validaDni = () => {
-//   if (!persDni.value || persDni.value.length !== 8 || isNaN(persDni.value)) {
-//     alert('El DNI debe tener 8 dígitos numéricos')
-//     return
-//   }
-//   apiValidaDocIdentidad(persDni.value, jwt, loadValidatedData)
-// }
-
-// const apiValidaDocIdentidad = (nro_dni, jwt, callback) => {
-//   console.log('NINO')
-//   const apiURL = `${apiBaseURL}/usuario/api/valida-dni/?dni=${nro_dni}`
-//   console.log(`apiValidaDocIndentidad ${apiURL}`)
-
-//   // Hacer la solicitud POST con axios
-//   axios
-//     .get(apiURL, {
-//       headers: {
-//         'Content-Type': 'application/json', // Especificar que enviamos datos en formato JSON
-//         Authorization: `Bearer ${jwt}`,
-//       },
-//     })
-//     .then((response) => {
-//       // Manejar la respuesta exitosa
-//       if (callback) {
-//         console.log('responsable', response.data)
-//         if (
-//           response.data['error'] === 'La contraseña para el DNI y RUC está caducada' ||
-//           response.data['error'] === 'Clave incorrecta'
-//         ) {
-//           alert(response.data['error'])
-//         } else {
-//           callback(response.data) // Ejecutar la función callback
-//         }
-//       }
-//     })
-//     .catch((error) => {
-//       // Manejar los errores
-//       console.log(`ErroresNino....${error}`)
-//       // alert(error.response.data['error'])
-//       // console.error('Error al validar el documento22:', error.response.data['error'])
-//     })
-// }
 </script>
 
 <style lang="sass" scoped>
@@ -320,15 +261,11 @@ const insertUser = async () => {
   flex-direction: row
   gap: 1rem
   margin-bottom: 5px
-  // padding: 2rem
-  // background: #f5f5f5
-  // border-radius: 10px
 
 .profile-section
   display: flex
   flex-direction: column
   align-items: center
-  // margin-right: 2rem
 
 .avatar
   width: 120px
@@ -352,7 +289,6 @@ const insertUser = async () => {
   flex: 1
   display: flex
   flex-direction: column
-  // gap: 1rem
 
 .row
   display: flex
@@ -401,14 +337,14 @@ input, select
   position: relative
 .search-button
   position: absolute
-  right: 3px /* Distancia desde la derecha */
+  right: 3px
   bottom: -13px
-  transform: translateY(-50%) /* Centra verticalmente */
-  width: 30px /* Ancho del botón */
-  height: 30px /* Alto del botón */
-  background-color: #55c2d6 /* Color azul */
+  transform: translateY(-50%)
+  width: 30px
+  height: 30px
+  background-color: #55c2d6
   border: none
-  border-radius: 50% /* Lo hace perfectamente circular */
+  border-radius: 50%
   cursor: pointer
   display: flex
   justify-content: center

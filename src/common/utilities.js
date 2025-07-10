@@ -63,3 +63,58 @@ export function formatearConSeparadorMiles(numero) {
 export function formatearFecha(fechaString) {
   return fechaString.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1')
 }
+
+// ADDED: Reusable function to export data to Excel from a backend endpoint
+import apiService from '@/services/apiService'
+import { showErrorDialog } from '@/common/messageUtils'
+
+/**
+ * Exports data to an Excel file by making a GET request to a backend endpoint.
+ * Handles file download and error display.
+ * @param {string} endpoint The API endpoint to request the Excel file from.
+ * @param {object} params Query parameters to send with the request (e.g., search filters).
+ * @param {string} filename The name for the downloaded Excel file (e.g., 'usuarios.xlsx').
+ */
+export const exportDataToExcel = async (endpoint, params = {}, filename = 'export.xlsx') => {
+  try {
+    const response = await apiService.get(endpoint, {
+      params,
+      responseType: 'blob', // Important: responseType must be 'blob' for file downloads
+    })
+
+    // Create a Blob from the response data
+    const blob = new Blob([response.data], { type: response.headers['content-type'] })
+
+    // Create a link element, set its href to the Blob, and simulate a click
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // Clean up the URL object
+    window.URL.revokeObjectURL(link.href)
+  } catch (error) {
+    console.error('Error exporting data to Excel:', error)
+    let errorMessage = 'Ocurrió un error al exportar los datos a Excel.'
+    if (error.response && error.response.data) {
+      // Try to parse error message from blob if available
+      try {
+        const errorBlob = new Blob([error.response.data], { type: 'application/json' })
+        const reader = new FileReader()
+        reader.onload = function () {
+          const errorJson = JSON.parse(reader.result)
+          errorMessage = errorJson.detail || errorJson.message || errorMessage
+          showErrorDialog('Error de Exportación', errorMessage)
+        }
+        reader.readAsText(errorBlob)
+        return // Exit to prevent default error dialog until blob is read
+      } catch (e) {
+        // Fallback to generic message if blob is not JSON
+        console.log('Error parsing error response:', e)
+      }
+    }
+    showErrorDialog('Error de Exportación', errorMessage)
+  }
+}

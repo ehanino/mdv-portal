@@ -107,5 +107,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Exponemos todo para que los componentes lo usen
-  return { user, isAuthenticated, fullName, accessMap, login, logout, refreshAccessToken }
+  return {
+    user,
+    isAuthenticated,
+    fullName,
+    accessMap,
+    login,
+    logout,
+    refreshAccessToken,
+    accessToken,
+  }
 })
