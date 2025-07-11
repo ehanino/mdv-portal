@@ -19,7 +19,8 @@
           :hideUbigeo="true"
           :hideEstadoCivil="true"
           :hideButtonValidaDni="true"
-          @save-data="handleSaveData"
+          :readOnlyDni="true"
+          @save-data="handleUpdateUser"
           @image-upload="handleImageFile"
         />
       </div>
@@ -39,17 +40,15 @@
 // ========================
 // IMPORTS
 // ========================
-import { ref, computed, toRefs, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 // Components
 import BaseValidaDni from '@/components/base/BaseValidaDni.vue'
 
 // Services & Utilities
+import apiService from '@/services/apiService'
 import { extractErrorMessage } from '@/common/utilities.js'
 import { showMessageDialog } from '@/common/messageUtils.js'
-
-// Stores
-import { useAuthStore } from '@/stores/auth.js'
 
 // ========================
 // PROPS & EMITS
@@ -60,177 +59,93 @@ const props = defineProps({
     required: true,
   },
 })
-console.log('ID recibido en el modal:', props.usuarioId)
-const emit = defineEmits(['close-modal'])
 
-// ========================
-// STORE MANAGEMENT
-// ========================
-const authStore = useAuthStore()
-const { accessToken } = toRefs(authStore)
-const jwt = accessToken.value
+const emit = defineEmits(['close-modal'])
 
 // ========================
 // REACTIVE VARIABLES
 // ========================
-// Form references
 const baseValidaDniRef = ref(null)
-
-// Form data
-const userEmail = ref('')
-const userCelular = ref('')
-
-// Tab management
+const imageFile = ref(null)
 const activeTab = ref(1)
 
 // ========================
-// COMPUTED PROPERTIES
-// ========================
-const isUpdatingUser = computed(() => !!props.userToEdit?.id)
-
-// ========================
-// TAB MANAGEMENT FUNCTIONS
+// TAB MANAGEMENT
 // ========================
 const selectTab = (tabNumber) => {
   activeTab.value = tabNumber
 }
 
 // ========================
-// FORM HANDLING FUNCTIONS
+// DATA & FORM HANDLING
 // ========================
-const clearForm = () => {
-  if (baseValidaDniRef.value) {
-    baseValidaDniRef.value.persId = ''
-    baseValidaDniRef.value.persDni = ''
-    baseValidaDniRef.value.persApellidoPaterno = ''
-    baseValidaDniRef.value.persApellidoMaterno = ''
-    baseValidaDniRef.value.persNombres = ''
-    baseValidaDniRef.value.persEstadoCivil = ''
-    baseValidaDniRef.value.persUbigeo = ''
-    baseValidaDniRef.value.persRestriccion = ''
-    baseValidaDniRef.value.persDireccion = ''
-    baseValidaDniRef.value.persPhotoUrl = ''
-    baseValidaDniRef.value.imagePreview = null
-    baseValidaDniRef.value.user_username = ''
-    baseValidaDniRef.value.user_is_active = false
-  }
-  userEmail.value = ''
-  userCelular.value = ''
+const handleImageFile = (file) => {
+  imageFile.value = file
 }
 
-const buildFormData = () => {
-  const formData = new FormData()
-
-  formData.append('ape_paterno', baseValidaDniRef.value.persApellidoPaterno)
-  formData.append('ape_materno', baseValidaDniRef.value.persApellidoMaterno)
-  formData.append('nombres', baseValidaDniRef.value.persNombres)
-  formData.append('dni', baseValidaDniRef.value.persDni)
-  formData.append('estado_civil', baseValidaDniRef.value.persEstadoCivil)
-  formData.append('ubigeo', baseValidaDniRef.value.persUbigeo)
-  formData.append('restriccion', baseValidaDniRef.value.persRestriccion)
-  formData.append('direccion', baseValidaDniRef.value.persDireccion)
-  formData.append('email', userEmail.value)
-  formData.append('celular', userCelular.value)
-  formData.append('username', baseValidaDniRef.value.user_username)
-  formData.append('is_active', baseValidaDniRef.value.user_is_active)
-
-  if (baseValidaDniRef.value.user_photo_url instanceof File) {
-    formData.append(
-      'image',
-      baseValidaDniRef.value.pers_photo_url,
-      baseValidaDniRef.value.pers_photo_url.name,
-    )
-  }
-
-  return formData
-}
-
-// ========================
-// ERROR HANDLING FUNCTIONS
-// ========================
-const handleError = (error) => {
-  const errorMessage = extractErrorMessage(error.response?.data || error.message)
-  showMessageDialog(errorMessage)
-}
-
-// ========================
-// SUBMIT FUNCTIONS
-// ========================
-const submitForm = async () => {
+const handleUpdateUser = async (userData) => {
   try {
-    const formData = buildFormData()
-    if (isUpdatingUser.value) {
-      await actualizarDatosUsuario(formData, props.userToEdit.id, jwt)
-      emit('close-modal')
-    } else {
-      await grabarDatosUsuario(formData, jwt)
-      emit('close-modal')
+    const formData = new FormData()
+    Object.keys(userData).forEach((key) => {
+      // Exclude DNI from the form data on updates
+      // Also exclude photo_url if a new image file is selected
+      if (
+        key !== 'dni' &&
+        !(key === 'photo_url' && imageFile.value) &&
+        userData[key] !== null &&
+        userData[key] !== undefined
+      ) {
+        formData.append(key, userData[key])
+      }
+    })
+
+    if (imageFile.value) {
+      formData.append('image', imageFile.value)
     }
+
+    // Use PATCH for partial updates, excluding DNI
+    await apiService.patch(`/api/v1/identity/usuarios/${props.usuarioId}/`, formData)
+
+    showMessageDialog('Éxito', 'Usuario actualizado correctamente.')
+    emit('close-modal', { updated: true })
   } catch (error) {
     handleError(error)
   }
 }
 
 // ========================
+// ERROR HANDLING
+// ========================
+const handleError = (error) => {
+  const errorMessage = extractErrorMessage(error.response?.data || error.message)
+  showMessageDialog('Error', errorMessage)
+}
+
+// ========================
 // WATCHERS
 // ========================
 watch(
-  () => props.userToEdit,
-  (newUser) => {
-    if (newUser) {
-      // Precargar datos del usuario para edición
-      if (baseValidaDniRef.value) {
-        baseValidaDniRef.value.loadValidatedData({
-          persDni: newUser.dni,
-          persApellidoPaterno: newUser.ape_paterno,
-          persApellidoMaterno: newUser.ape_materno,
-          persNombres: newUser.nombres,
-          persEstadoCivil: newUser.estado_civil,
-          persUbigeo: newUser.ubigeo,
-          persRestriccion: newUser.restriccion,
-          persDireccion: newUser.direccion,
-          persPhotoUrl: newUser.image_url,
-          user_username: newUser.username,
-          user_is_active: newUser.is_active,
-        })
+  () => props.usuarioId,
+  async (newId) => {
+    imageFile.value = null // Reset image on user change
+    if (newId) {
+      try {
+        const response = await apiService.get(`/api/v1/identity/usuarios/${newId}/`)
+        
+        if (baseValidaDniRef.value) {
+          baseValidaDniRef.value.loadValidatedData(response.data)
+        }
+      } catch (error) {
+        handleError(error)
       }
-      userEmail.value = newUser.email || ''
-      userCelular.value = newUser.celular || ''
     } else {
-      // Limpiar formulario para creación
-      clearForm()
+      if (baseValidaDniRef.value) {
+        baseValidaDniRef.value.resetFormulario()
+      }
     }
   },
   { immediate: true },
 )
-
-// ========================
-// COMMENTED CODE (for reference)
-// ========================
-/*
-// User details and error handling - commented out for now
-const isReadonly = ref(true)
-const userDetails = ref(null)
-const error = ref(null)
-
-const fetchUserDetails = async (dni) => {
-  try {
-    const response = await apiUsuarioDetail(dni, jwt)
-    userEmail.value = response['email'] || ''
-    userCelular.value = response['celular'] || ''
-    userDetails.value = response
-    error.value = null // Limpiar errores si la solicitud es exitosa
-  } catch (err) {
-    error.value = err.response?.data?.detail || 'Error desconocido'
-    userDetails.value = null // Limpiar detalles si hay un error
-  }
-}
-
-// Additional imports that might be needed later
-import BaseInputData from '@/components/base/BaseInputData.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import { grabarDatosUsuario, actualizarDatosUsuario, apiUsuarioDetail } from '@/views/usuarios/services/usuarioServices.js'
-*/
 </script>
 
 <style lang="sass" scoped>

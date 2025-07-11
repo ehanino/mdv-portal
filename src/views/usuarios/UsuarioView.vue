@@ -49,7 +49,7 @@
   </BaseTemplateData>
 
   <!-- M O D A L   -->
-  <ModalComponent :isOpen="!!activeModal.key" @close="closeModal">
+  <ModalComponent :isOpen="!!activeModal.key" @close="handleCloseModal">
     <!-- Contenido personalizado dentro de la modal -->
     <template #modal-content>
       <!-- Aquí pasamos el BaseCard dentro del modal -->
@@ -58,12 +58,15 @@
 
         <template #body>
           <div v-if="activeModal.key === 'UsuarioModalView'">
-            <UsuarioModalView :usuario-id="activeModal.id"></UsuarioModalView>
+            <UsuarioModalView
+              :usuario-id="activeModal.id"
+              @close-modal="handleCloseModal"
+            ></UsuarioModalView>
           </div>
         </template>
       </CardRow>
     </template>
-    <button @click="closeModal">Cerrar Modal</button>
+    <button @click="handleCloseModal">Cerrar Modal</button>
   </ModalComponent>
   <!-- E N D   M O D A L  -->
 </template>
@@ -124,8 +127,11 @@ const openModal = (key, id) => {
   activeModal.value = { key, id }
 }
 
-const closeModal = () => {
+const handleCloseModal = (payload) => {
   activeModal.value = { key: null, id: null }
+  if (payload?.updated) {
+    fetchUsuarios()
+  }
 }
 
 // ========================
@@ -173,7 +179,7 @@ const handleSaveData = async (personaData) => {
   })
 
   if (imageFile.value) {
-    formData.append('photo', imageFile.value)
+    formData.append('image', imageFile.value)
   }
 
   try {

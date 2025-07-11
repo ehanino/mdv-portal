@@ -4,17 +4,17 @@
   <div style="margin: auto auto; margin-top: 10px">
     <div class="form-container" style="padding: 5px">
       <div class="profile-section user-photo">
-        <input id="image" type="file" @change="handleImageUpload" accept="image/*" hidden />
+        <input :id="uniqueId" type="file" @change="handleImageUpload" accept="image/*" hidden />
         <img
           :src="
             imagePreview ||
-            (estadoPersona.photo_url ? getFullImageUrl(estadoPersona.photo_url) : iconUsersPath)
+            (estadoPersona.photo_url ? `${getFullImageUrl(estadoPersona.photo_url)}?t=${imageTimestamp}` : iconUsersPath)
           "
           alt="Vista previa de la imagen"
           class="avatar"
           title="CRUD User"
         />
-        <label for="image" class="label-img" :hidden="props.hideSeleccionarImagen"
+        <label :for="uniqueId" class="label-img" :hidden="props.hideSeleccionarImagen"
           >Selecciona imagen</label
         >
       </div>
@@ -28,6 +28,7 @@
               inputId="estadoPersona-dni"
               labelValue="DNI"
               :style="{ width: props.hideButtonValidaDni ? '312px' : '180px' }"
+              :readonly="props.readOnlyDni"
               @keydown="forceNumeric"
               @blur="validateDniLength"
             />
@@ -142,6 +143,11 @@ import { getFullImageUrl } from '@/views/usuarios/services/usuarioServices'
 import iconUsersPath from '@/assets/img/user.png'
 
 // ========================
+// UNIQUE ID
+// ========================
+const uniqueId = `file-upload-${Math.random().toString(36).substring(2, 9)}`
+
+// ========================
 // REACTIVE VARIABLES
 // ========================
 
@@ -152,6 +158,7 @@ const estadoPersona = reactive({
   apellido_paterno: '',
   apellido_materno: '',
   nombres: '',
+  email: '', // Added email field
   estadoCivil: 0,
   ubigeo: '',
   restriccion: '',
@@ -160,6 +167,7 @@ const estadoPersona = reactive({
 })
 
 const imagePreview = ref(null)
+const imageTimestamp = ref(Date.now()) // New reactive variable for cache busting
 
 const selectionOptionsPersona = ref([
   { value: 0, label: 'Soltero' },
@@ -189,6 +197,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  readOnlyDni: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 // Emits
@@ -205,16 +217,19 @@ const emit = defineEmits(['update:modelValue', 'image-upload', 'save-data'])
 
 // Mapeo de datos
 const loadValidatedData = (data) => {
-  estadoPersona.id = data.pk
+  estadoPersona.id = data.pk || data.id
   estadoPersona.dni = data.dni
   estadoPersona.apellido_paterno = data.apellido_paterno
   estadoPersona.apellido_materno = data.apellido_materno
   estadoPersona.nombres = data.nombres
-  estadoPersona.estadoCivil = data.estadoCivil
+  estadoPersona.email = data.email // Assign email
+  estadoPersona.estadoCivil = data.estadoCivil !== undefined && data.estadoCivil !== null ? data.estadoCivil : 0 // Assign estadoCivil with a default value
   estadoPersona.ubigeo = data.ubigeo
   estadoPersona.restriccion = data.restriccion
   estadoPersona.direccion = data.direccion
-  estadoPersona.photo_url = data.photo_url
+  estadoPersona.photo_url = data.image || data.imageUrl || data.image_url || data.photo_url // Handle all possible names
+  imagePreview.value = null // Clear previous preview
+  imageTimestamp.value = Date.now() // Update timestamp to force image reload
 }
 
 // Fetch de usuarios
@@ -274,6 +289,7 @@ const resetFormulario = () => {
   Object.keys(estadoPersona).forEach((key) => {
     estadoPersona[key] = ''
   })
+  imagePreview.value = null // Also reset the image preview
   console.log('Formulario reseteado')
 }
 
@@ -288,7 +304,7 @@ defineExpose({
 })
 
 // ========================
-// LIFECYCLE HOOKS
+// LIFECYECLE HOOKS
 // ========================
 // (No hay hooks de ciclo de vida en el código proporcionado)
 
