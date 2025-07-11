@@ -175,7 +175,7 @@ function formatCellValue(value, colIndex) {
     background-color: #fee2e2 !important
 
 .table-container
-    max-height: 400px
+    max-height: 550px !important
     overflow-y: auto
     position: relative
 

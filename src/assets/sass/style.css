@@ -80,6 +80,30 @@ body {
   }
 }
 
+.row-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-nuevo, .btn-grabar {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-nuevo {
+  background-color: #55c2d6;
+}
+
+.btn-grabar {
+  background-color: #42b3d4;
+}
+
 .form__input[disabled] {
   cursor: not-allowed;
 }

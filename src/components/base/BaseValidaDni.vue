@@ -1,14 +1,16 @@
 <!-- src/components/base/BaseValidaDni.vue -->
 
 <template>
-  <div style="margin: auto auto; margin-top: 10px">
-    <div class="form-container" style="padding: 5px">
+  <div class="outer-container">
+    <div class="form-container">
       <div class="profile-section user-photo">
         <input :id="uniqueId" type="file" @change="handleImageUpload" accept="image/*" hidden />
         <img
           :src="
             imagePreview ||
-            (estadoPersona.photo_url ? `${getFullImageUrl(estadoPersona.photo_url)}?t=${imageTimestamp}` : iconUsersPath)
+            (estadoPersona.photo_url
+              ? `${getFullImageUrl(estadoPersona.photo_url)}?t=${imageTimestamp}`
+              : iconUsersPath)
           "
           alt="Vista previa de la imagen"
           class="avatar"
@@ -33,7 +35,7 @@
               @blur="validateDniLength"
             />
           </div>
-          <div class="row-buttons" v-if="!props.hideButtonValidaDni" style="padding-right: 4px">
+          <div class="row-buttons" v-if="!props.hideButtonValidaDni">
             <button class="btn-nuevo" @click="validaDni">Valida</button>
           </div>
           <BaseInputData
@@ -65,7 +67,6 @@
             @keydown="forceAlphabetic"
           />
         </div>
-
         <BaseInputData
           type="text"
           v-model="estadoPersona.nombres"
@@ -74,7 +75,6 @@
           labelValue="Nombres"
           @keydown="forceAlphabetic"
         />
-
         <BaseInputData
           type="text"
           v-model="estadoPersona.email"
@@ -82,7 +82,6 @@
           inputId="estadoPersona-email"
           labelValue="Correo Electrónico"
         />
-
         <div class="row row-double">
           <BaseSelectData
             v-model="estadoPersona.estadoCivil"
@@ -92,7 +91,6 @@
             :readonly="isReadonly"
             :hidden="props.hideEstadoCivil"
           />
-          <!-- @change="updateSelectedType" -->
           <BaseInputData
             type="text"
             v-model="estadoPersona.ubigeo"
@@ -103,26 +101,19 @@
             :hidden="props.hideUbigeo"
           />
         </div>
-
-        <div class="form-row-double row-buttons">
-          <button class="btn-nuevo" @click="resetFormulario">Nuevo</button>
-          <button class="btn-grabar" @click="emit('save-data', estadoPersona)">Grabar</button>
+        <div v-if="props.showIsActiveCheckbox" class="checkbox-container">
+          <input
+            type="checkbox"
+            id="modern-checkbox"
+            class="modern-checkbox"
+            v-model="estadoPersona.is_active"
+            aria-label="Estado del usuario"
+          />
+          <label id="id-checked" for="modern-checkbox">{{
+            estadoPersona.is_active ? 'Activo' : 'Inactivo'
+          }}</label>
         </div>
       </div>
-      <!--
-      <div class="form-section">
-        <div style="width: 100% !important; height: 100%">
-          <BaseTemplateData
-            class=""
-            :columns="estAplicacion.columns"
-            :rows="estAplicacion.rows"
-            :columnTypes="estAplicacion.columnsTypes"
-            :hiddenColumns="estAplicacion.columnsHidden"
-          >
-          </BaseTemplateData>
-        </div>
-      </div>
-       -->
     </div>
   </div>
 </template>
@@ -164,6 +155,7 @@ const estadoPersona = reactive({
   restriccion: '',
   direccion: '',
   photo_url: '',
+  is_active: true,
 })
 
 const imagePreview = ref(null)
@@ -201,6 +193,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showIsActiveCheckbox: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 // Emits
@@ -223,11 +219,13 @@ const loadValidatedData = (data) => {
   estadoPersona.apellido_materno = data.apellido_materno
   estadoPersona.nombres = data.nombres
   estadoPersona.email = data.email // Assign email
-  estadoPersona.estadoCivil = data.estadoCivil !== undefined && data.estadoCivil !== null ? data.estadoCivil : 0 // Assign estadoCivil with a default value
+  estadoPersona.estadoCivil =
+    data.estadoCivil !== undefined && data.estadoCivil !== null ? data.estadoCivil : 0 // Assign estadoCivil with a default value
   estadoPersona.ubigeo = data.ubigeo
   estadoPersona.restriccion = data.restriccion
   estadoPersona.direccion = data.direccion
   estadoPersona.photo_url = data.image || data.imageUrl || data.image_url || data.photo_url // Handle all possible names
+  estadoPersona.is_active = data.is_active !== undefined ? data.is_active : true // Default to true if not provided
   imagePreview.value = null // Clear previous preview
   imageTimestamp.value = Date.now() // Update timestamp to force image reload
 }
@@ -287,10 +285,13 @@ const handleImageUpload = (event) => {
 
 const resetFormulario = () => {
   Object.keys(estadoPersona).forEach((key) => {
-    estadoPersona[key] = ''
+    if (key === 'is_active') {
+      estadoPersona[key] = true // Default to active
+    } else {
+      estadoPersona[key] = ''
+    }
   })
   imagePreview.value = null // Also reset the image preview
-  console.log('Formulario reseteado')
 }
 
 // ========================
@@ -315,6 +316,7 @@ defineExpose({
 </script>
 
 <style lang="sass" scoped>
+
 .form-container
   display: flex
   justify-content: space-around
@@ -374,25 +376,25 @@ input, select
   border-radius: 6px
   background: white
 
-.row-buttons
-  display: flex
-  justify-content: flex-end
-  gap: 1rem
-  margin-top: 1rem
+// .row-buttons
+//   display: flex
+//   justify-content: flex-end
+//   gap: 1rem
+//   margin-top: 1rem
 
-.btn-nuevo, .btn-grabar
-  padding: 0.5rem 1.5rem
-  border: none
-  border-radius: 6px
-  color: white
-  font-weight: bold
-  cursor: pointer
+// .btn-nuevo, .btn-grabar
+//   padding: 0.5rem 1.5rem
+//   border: none
+//   border-radius: 6px
+//   color: white
+//   font-weight: bold
+//   cursor: pointer
 
-.btn-nuevo
-  background-color: #55c2d6
+// .btn-nuevo
+//   background-color: #55c2d6
 
-.btn-grabar
-  background-color: #42b3d4
+// .btn-grabar
+//   background-color: #42b3d4
 .search-container
   position: relative
 .search-button
@@ -416,4 +418,44 @@ input, select
   font-size: 12px
   &:hover
     color: #42b3d4
+
+.checkbox-container
+  display: flex
+  align-items: center
+  gap: 8px
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+  font-size: .8rem
+  color: #333
+  margin-top: 1rem
+  label
+    cursor: pointer
+    user-select: none
+
+.modern-checkbox
+  appearance: none
+  width: 20px
+  height: 20px
+  border: 2px solid #4A90E2
+  border-radius: 4px
+  cursor: pointer
+  position: relative
+  transition: all 0.2s ease-in-out
+
+  &:checked
+    background-color: #4A90E2
+    border-color: #4A90E2
+
+    &::after
+      content: '\2713'
+      position: absolute
+      top: 50%
+      left: 50%
+      transform: translate(-50%, -50%)
+      color: #fff
+      font-size: 14px
+      font-weight: bold
+
+  &:focus
+    outline: none
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3)
 </style>

@@ -13,24 +13,25 @@
 
     <div class="tabs-content" ref="contentContainer">
       <!-- Contenedor para el contenido de las pestañas -->
-      <div v-if="activeTab === 1" class="tab-panel">
+      <div v-show="activeTab === 1" class="tab-panel">
         <BaseValidaDni
           ref="baseValidaDniRef"
           :hideUbigeo="true"
           :hideEstadoCivil="true"
           :hideButtonValidaDni="true"
           :readOnlyDni="true"
-          @save-data="handleUpdateUser"
+          :showIsActiveCheckbox="true"
           @image-upload="handleImageFile"
         />
+        <hr class="linea-horizontal" />
+        <div class="modal-actions">
+          <button class="btn-grabar" @click="handleUpdateUser">Guardar Cambios</button>
+        </div>
       </div>
 
-      <div v-if="activeTab === 2" class="tab-panel">
+      <div v-show="activeTab === 2" class="tab-panel">
         <!-- Contenido para Roles y Perfiles -->
-        <div class="placeholder-content">
-          <h3>Gestión de Roles y Perfiles</h3>
-          <p>Aquí irá la gestión de roles y perfiles del usuario.</p>
-        </div>
+        <BaseUserGroups v-if="props.usuarioId" :user-id="props.usuarioId" />
       </div>
     </div>
   </div>
@@ -44,6 +45,7 @@ import { ref, watch } from 'vue'
 
 // Components
 import BaseValidaDni from '@/components/base/BaseValidaDni.vue'
+import BaseUserGroups from '@/components/base/BaseUserGroups.vue'
 
 // Services & Utilities
 import apiService from '@/services/apiService'
@@ -83,9 +85,13 @@ const handleImageFile = (file) => {
   imageFile.value = file
 }
 
-const handleUpdateUser = async (userData) => {
+const handleUpdateUser = async () => {
+  if (!baseValidaDniRef.value) return
+
   try {
+    const userData = baseValidaDniRef.value.estadoPersona
     const formData = new FormData()
+
     Object.keys(userData).forEach((key) => {
       // Exclude DNI from the form data on updates
       // Also exclude photo_url if a new image file is selected
@@ -131,7 +137,7 @@ watch(
     if (newId) {
       try {
         const response = await apiService.get(`/api/v1/identity/usuarios/${newId}/`)
-        
+
         if (baseValidaDniRef.value) {
           baseValidaDniRef.value.loadValidatedData(response.data)
         }
@@ -149,6 +155,29 @@ watch(
 </script>
 
 <style lang="sass" scoped>
+
+.linea-horizontal
+  width: 100%
+  border: 0
+  border-top: 1px solid #000
+  margin: 0
+.modal-actions
+  display: flex
+  justify-content: flex-end
+  padding: 1rem 1.5rem
+  background-color: #f8fafc
+  border-top: 1px solid #e5e7eb
+
+// .btn-grabar
+//   padding: 0.5rem 1.5rem
+//   border: none
+//   border-radius: 6px
+//   color: white
+//   font-weight: bold
+//   cursor: pointer
+//   background-color: #42b3d4
+//   &:hover
+//     background-color: #369cb8
 .form-container
   background-color: #ffffff
   display: flex

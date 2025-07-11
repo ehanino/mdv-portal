@@ -11,6 +11,13 @@
       @image-upload="handleImageFile"
     />
   </div>
+  <div
+    class="row-buttons"
+    style="width: 65%; margin: 1rem auto; padding-right: 1rem; justify-content: flex-end"
+  >
+    <button class="btn-nuevo" @click="handleNew">Nuevo</button>
+    <button class="btn-grabar" @click="handleSaveData">Grabar</button>
+  </div>
   <div class="input-icon-container">
     <BaseInputData
       type="text"
@@ -169,9 +176,23 @@ const handleImageFile = (file) => {
   imageFile.value = file
 }
 
-const handleSaveData = async (personaData) => {
-  const formData = new FormData()
+const handleNew = () => {
+  if (baseValidaDniRef.value) {
+    baseValidaDniRef.value.resetFormulario()
+    imageFile.value = null // También reseteamos el archivo de imagen en el padre
+  }
+}
 
+const handleSaveData = async () => {
+  if (!baseValidaDniRef.value) return
+
+  const personaData = baseValidaDniRef.value.estadoPersona
+  if (!personaData.dni || personaData.dni.length !== 8) {
+    showMessageDialog('Error de Validación', 'El DNI es obligatorio y debe tener 8 dígitos.')
+    return
+  }
+
+  const formData = new FormData()
   Object.keys(personaData).forEach((key) => {
     if (personaData[key]) {
       formData.append(key, personaData[key])
@@ -184,11 +205,12 @@ const handleSaveData = async (personaData) => {
 
   try {
     await apiService.post('/api/v1/identity/usuarios/', formData)
-    showMessageDialog('Usuario creado correctamente')
-    baseValidaDniRef.value?.resetFormulario() // Reset form after fetching data
+    showMessageDialog('Éxito', 'Usuario creado correctamente.')
+    handleNew() // Reutilizamos la lógica de reseteo
     fetchUsuarios()
   } catch (error) {
     console.error('Error al crear el usuario:', error.response?.data || error.message)
+    // Aquí podrías usar tu messageUtils para mostrar el error al usuario
   }
 }
 
