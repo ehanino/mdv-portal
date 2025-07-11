@@ -2,7 +2,52 @@
 
 <template>
   <div style="width: 65%; margin: auto auto">
-    <BaseValidaDni ref="baseValidaDniRef" :hideUbigeo="false" :hideEstadoCivil="false" />
+    <BaseValidaDni
+      ref="baseValidaDniRef"
+      :hideUbigeo="false"
+      :hideEstadoCivil="false"
+      :hideButtonValidaDni="true"
+    />
+    <div :class="{ 'disabled-div': isDivDisabled }" style="margin-top: 10px">
+      <div style="display: flex; flex-direction: row">
+        <BaseSelectData
+          v-model="conceptos"
+          inputId="nombres-select"
+          labelValue="Concepto"
+          :options="conceptoOptions"
+          style="width: 220px !important"
+        />
+
+        <template v-if="Number(selectedType) === 2">
+          <BaseSelectData
+            v-model="detalleSelect"
+            inputId="inputId"
+            labelValue="Seleccionar"
+            :options="detalleOptions"
+          />
+        </template>
+
+        <BaseInputData
+          v-else
+          :type="selectedType"
+          v-model="detalle"
+          inputId="detalle"
+          labelValue="Detalle"
+        />
+
+        <img
+          :src="iconDownArrowPath"
+          alt="icono flecha abajo"
+          class="img-arrow"
+          @click="submitDownArrow"
+        />
+      </div>
+      <BaseTemplateData :columns="['Id', 'Concepto', 'Detalle']" :rows="formattedRows">
+        <template #actions="{ row }">
+          <button @click="deleteRow(row[1], row[2])" class="btn-delete">🗑️</button>
+        </template>
+      </BaseTemplateData>
+    </div>
   </div>
   <div class="input-icon-container">
     <BaseInputData
@@ -51,6 +96,7 @@ import BaseInputData from '@/components/base/BaseInputData.vue'
 import iconExcel from '@/assets/img/excel.png'
 import imgPdf from '@/assets/img/pdf.png'
 import imgDelete from '@/assets/img/eliminar.png'
+import iconDownArrowPath from '@/assets/img/down-arrow.png'
 
 const baseValidaDniRef = ref(null)
 
@@ -95,4 +141,8 @@ const deleteRow = (rowId) => {
   cursor: pointer
   display: blcok
   margin-top: 17px
+.img-arrow
+    width: 30px
+    height: 30px
+    margin-top: 20px
 </style>

@@ -222,9 +222,16 @@ function formatCellValue(value, colIndex) {
 
 // ADDED: Styles for status cells
 .status-active-cell
-  background-color: #dcfce7; // light green
-  font-weight: bold;
+  background-color: #dcfce7
+  font-weight: bold
 .status-inactive-cell
-  background-color: #fee2e2; // light red
-  font-weight: bold;
+  background-color: #fee2e2
+  font-weight: bold
+.empty-state
+    display: flex
+    justify-content: center
+    align-items: center
+    padding: 20px
+    font-style: italic
+    color: #666
 </style>
